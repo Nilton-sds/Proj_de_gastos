@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Nosso Dinheiro</title>
+<style>
+  :root{
+    --ink:#0F2E2A;
+    --paper:#F6F3EC;
+    --card:#FFFFFF;
+    --teal:#0F5C55;
+    --teal-deep:#0A403B;
+    --coral:#E4633F;
+    --coral-soft:#FBE4DB;
+    --green:#2E7D4F;
+    --green-soft:#E4F2E7;
+    --amber:#B8791A;
+    --amber-soft:#FBEED9;
+    --line:#E4DFD1;
+    --muted:#6B7C77;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    min-height:100vh;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .app{max-width:460px;margin:0 auto;padding:0 0 40px;min-height:100vh;position:relative;}
+
+  header{
+    padding:22px 20px 16px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{
+    width:38px;height:38px;border-radius:11px;
+    background:var(--teal);display:flex;align-items:center;justify-content:center;
+    font-size:19px;flex-shrink:0;
+  }
+  .brand h1{font-size:17px;margin:0;font-weight:700;letter-spacing:-0.01em;}
+  .brand p{font-size:12px;margin:1px 0 0;color:var(--muted);}
+  .nav-btn{
+    border:none;background:var(--card);color:var(--teal-deep);
+    font-size:13px;font-weight:600;padding:9px 14px;border-radius:20px;
+    box-shadow:0 1px 2px rgba(15,46,42,.08);
+  }
+
+  /* ---------- QUICK ENTRY VIEW ---------- */
+  .today-strip{
+    margin:0 20px 18px;padding:14px 16px;border-radius:16px;
+    background:var(--teal-deep);color:#fff;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .today-strip .label{font-size:12px;opacity:.75;margin:0 0 3px;}
+  .today-strip .value{font-size:21px;font-weight:700;margin:0;letter-spacing:-0.02em;}
+  .today-strip .sub{font-size:11px;opacity:.7;text-align:right;}
+
+  .cat-grid{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:10px;
+    padding:0 20px;
+  }
+  .cat-btn{
+    display:flex;align-items:center;gap:11px;
+    background:var(--card);border:1.5px solid var(--line);
+    border-radius:16px;padding:16px 14px;
+    font-family:inherit;text-align:left;cursor:pointer;
+    transition:transform .08s ease, border-color .12s ease;
+  }
+  .cat-btn:active{transform:scale(.97);border-color:var(--teal);}
+  .cat-emoji{font-size:23px;line-height:1;}
+  .cat-label{font-size:14px;font-weight:600;color:var(--ink);}
+
+  .income-btn{
+    margin:14px 20px 4px;padding:15px;border-radius:16px;
+    background:var(--green-soft);border:1.5px dashed var(--green);
+    color:var(--green);font-weight:700;font-size:14px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    font-family:inherit;cursor:pointer;width:calc(100% - 40px);
+  }
+
+  .recent{margin:22px 20px 0;}
+  .recent h2{font-size:13px;color:var(--muted);font-weight:600;margin:0 0 10px;}
+  .recent-item{
+    display:flex;align-items:center;gap:11px;
+    padding:11px 0;border-bottom:1px solid var(--line);
+  }
+  .recent-item:last-child{border-bottom:none;}
+  .recent-emoji{
+    width:34px;height:34px;border-radius:10px;background:var(--paper);
+    display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;
+  }
+  .recent-mid{flex:1;min-width:0;}
+  .recent-cat{font-size:13.5px;font-weight:600;margin:0;}
+  .recent-desc{font-size:11.5px;color:var(--muted);margin:1px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .recent-val{font-size:14px;font-weight:700;flex-shrink:0;}
+  .recent-val.pendente{color:var(--amber);}
+  .recent-del{
+    border:none;background:none;color:var(--muted);font-size:16px;
+    padding:4px 2px;cursor:pointer;flex-shrink:0;
+  }
+  .empty-note{font-size:13px;color:var(--muted);padding:6px 0 2px;}
+
+  /* ---------- ENTRY SHEET (modal) ---------- */
+  .sheet-backdrop{
+    position:fixed;inset:0;background:rgba(15,46,42,.42);
+    display:none;align-items:flex-end;justify-content:center;z-index:20;
+  }
+  .sheet-backdrop.open{display:flex;}
+  .sheet{
+    background:var(--card);width:100%;max-width:460px;
+    border-radius:22px 22px 0 0;padding:22px 20px 26px;
+    animation:slideup .22s ease-out;
+  }
+  @keyframes slideup{from{transform:translateY(24px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .sheet-head{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+  .sheet-emoji{font-size:26px;}
+  .sheet-head h3{margin:0;font-size:17px;font-weight:700;}
+  .amount-row{display:flex;align-items:baseline;justify-content:center;gap:4px;margin:8px 0 20px;}
+  .amount-row span{font-size:22px;color:var(--muted);font-weight:600;}
+  .amount-row input{
+    border:none;background:none;font-size:40px;font-weight:700;color:var(--ink);
+    width:220px;text-align:left;font-family:inherit;
+  }
+  .amount-row input:focus{outline:none;}
+  .desc-input{
+    width:100%;padding:13px 14px;border-radius:12px;border:1.5px solid var(--line);
+    font-size:14px;font-family:inherit;margin-bottom:14px;background:var(--paper);
+  }
+  .desc-input:focus{outline:none;border-color:var(--teal);}
+  .toggle-row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px 4px;margin-bottom:16px;
+  }
+  .toggle-row span{font-size:13.5px;font-weight:600;color:var(--ink);}
+  .switch{
+    width:44px;height:26px;border-radius:14px;background:var(--line);
+    position:relative;cursor:pointer;flex-shrink:0;transition:background .15s;
+  }
+  .switch.on{background:var(--amber);}
+  .switch .knob{
+    width:20px;height:20px;border-radius:50%;background:#fff;
+    position:absolute;top:3px;left:3px;transition:left .15s;
+    box-shadow:0 1px 2px rgba(0,0,0,.2);
+  }
+  .switch.on .knob{left:21px;}
+  .sheet-actions{display:flex;gap:10px;}
+  .btn-cancel, .btn-save{
+    flex:1;border:none;padding:15px;border-radius:14px;font-size:15px;font-weight:700;
+    font-family:inherit;cursor:pointer;
+  }
+  .btn-cancel{background:var(--paper);color:var(--muted);}
+  .btn-save{background:var(--teal);color:#fff;}
+  .btn-save:disabled{background:var(--line);color:var(--muted);}
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--teal-deep);color:#fff;padding:12px 22px;border-radius:24px;
+    font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s ease;
+    z-index:30;display:flex;align-items:center;gap:7px;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* ---------- RESUMO VIEW ---------- */
+  .resumo-view{display:none;padding:0 20px;}
+  .resumo-view.active{display:block;}
+  .quick-view.hidden{display:none;}
+
+  .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+  .kpi-grid .kpi-wide{grid-column:1 / -1;}
+  .kpi{
+    background:var(--card);border-radius:16px;padding:14px 16px;border:1.5px solid var(--line);
+  }
+  .kpi .l{font-size:11px;color:var(--muted);font-weight:600;margin:0 0 5px;}
+  .kpi .v{font-size:19px;font-weight:700;margin:0;letter-spacing:-0.02em;}
+  .kpi.warn .v{color:var(--coral);}
+  .kpi.good .v{color:var(--green);}
+
+  .section-title{font-size:13px;font-weight:700;color:var(--teal-deep);margin:22px 0 10px;}
+  .cat-row{
+    background:var(--card);border-radius:14px;padding:13px 15px;margin-bottom:9px;border:1.5px solid var(--line);
+  }
+  .cat-row-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .cat-row-top .name{font-size:13.5px;font-weight:600;display:flex;gap:8px;align-items:center;}
+  .cat-row-top .nums{font-size:12.5px;color:var(--muted);}
+  .bar-track{height:7px;border-radius:4px;background:var(--paper);overflow:hidden;}
+  .bar-fill{height:100%;border-radius:4px;background:var(--teal);}
+  .bar-fill.over{background:var(--coral);}
+
+  .pend-item{
+    display:flex;justify-content:space-between;align-items:center;
+    background:var(--amber-soft);border-radius:12px;padding:11px 14px;margin-bottom:8px;
+  }
+  .pend-item .desc{font-size:13px;font-weight:600;}
+  .pend-item .val{font-size:13px;font-weight:700;color:var(--amber);}
+  .pend-item button{
+    border:none;background:var(--amber);color:#fff;font-size:11px;font-weight:700;
+    padding:6px 10px;border-radius:8px;margin-left:8px;font-family:inherit;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="brand">
+      <div class="brand-mark">💰</div>
+      <div>
+        <h1>Nosso Dinheiro</h1>
+        <p id="headerSub">toque numa categoria pra lançar</p>
+      </div>
+    </div>
+    <button class="nav-btn" id="viewToggle">Ver resumo</button>
+  </header>
+
+  <!-- QUICK ENTRY -->
+  <div class="quick-view" id="quickView">
+    <div class="today-strip">
+      <div>
+        <p class="label">gasto de hoje</p>
+        <p class="value" id="todayTotal">R$ 0,00</p>
+      </div>
+      <div class="sub" id="todayCount">0 lançamentos</div>
+    </div>
+
+    <div class="cat-grid" id="catGrid"></div>
+
+    <button class="income-btn" id="incomeBtn">💵 registrar dinheiro que entrou</button>
+
+    <div class="recent" id="recentBox">
+      <h2>últimos lançamentos</h2>
+      <div id="recentList"></div>
+    </div>
+  </div>
+
+  <!-- RESUMO -->
+  <div class="resumo-view" id="resumoView">
+    <div class="kpi-grid" style="margin-top:18px;">
+      <div class="kpi"><p class="l">entradas do mês</p><p class="v" id="kRenda">R$ 0</p></div>
+      <div class="kpi"><p class="l">gastos do mês</p><p class="v" id="kGastos">R$ 0</p></div>
+      <div class="kpi kpi-wide" id="kSaldoBox"><p class="l">saldo livre</p><p class="v" id="kSaldo">R$ 0</p></div>
+    </div>
+
+    <div class="section-title">por categoria</div>
+    <div id="catBreakdown"></div>
+
+    <div class="section-title">contas pendentes</div>
+    <div id="pendList"></div>
+  </div>
+
+</div>
+
+<!-- ENTRY SHEET -->
+<div class="sheet-backdrop" id="sheetBackdrop">
+  <div class="sheet">
+    <div class="sheet-head">
+      <span class="sheet-emoji" id="sheetEmoji">🏠</span>
+      <h3 id="sheetTitle">Moradia</h3>
+    </div>
+    <div class="amount-row">
+      <span>R$</span>
+      <input type="text" inputmode="decimal" id="amountInput" placeholder="0,00" autocomplete="off">
+    </div>
+    <input type="text" class="desc-input" id="descInput" placeholder="descrição (opcional)">
+    <div class="toggle-row" id="pendRow">
+      <span>ainda não paguei essa conta</span>
+      <div class="switch" id="pendSwitch"><div class="knob"></div></div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" id="cancelBtn">cancelar</button>
+      <button class="btn-save" id="saveBtn" disabled>salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ salvo</div>
+
+<script>
+const CATEGORIES = [
+  {id:"Moradia", emoji:"🏠"},
+  {id:"Utilidades", emoji:"💡"},
+  {id:"Alimentação/Mercado", emoji:"🛒"},
+  {id:"Saúde", emoji:"⚕️"},
+  {id:"Transporte", emoji:"🚗"},
+  {id:"Lazer", emoji:"🎉"},
+  {id:"Assinaturas", emoji:"📱"},
+  {id:"Outros", emoji:"📦"},
+];
+const TETOS = {
+  "Moradia":1500, "Utilidades":400, "Alimentação/Mercado":800, "Saúde":300,
+  "Transporte":300, "Lazer":200, "Assinaturas":150, "Outros":600
+};
+const emojiFor = c => (CATEGORIES.find(x=>x.id===c)||{}).emoji || "💵";
+const fmt = n => "R$ " + (n||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+
+let entries = [];
+let pendingType = null; // category being entered, or "renda"
+let pendIsUnpaid = false;
+
+const catGrid = document.getElementById("catGrid");
+CATEGORIES.forEach(c=>{
+  const b = document.createElement("button");
+  b.className = "cat-btn";
+  b.innerHTML = `<span class="cat-emoji">${c.emoji}</span><span class="cat-label">${c.id}</span>`;
+  b.onclick = ()=>openSheet(c.id, c.emoji);
+  catGrid.appendChild(b);
+});
+
+document.getElementById("incomeBtn").onclick = ()=>openSheet("renda","💵","Dinheiro recebido");
+
+function openSheet(type, emoji, titleOverride){
+  pendingType = type;
+  pendIsUnpaid = false;
+  document.getElementById("sheetEmoji").textContent = emoji;
+  document.getElementById("sheetTitle").textContent = titleOverride || type;
+  document.getElementById("amountInput").value = "";
+  document.getElementById("descInput").value = "";
+  document.getElementById("pendSwitch").classList.remove("on");
+  document.getElementById("pendRow").style.display = type==="renda" ? "none" : "flex";
+  document.getElementById("saveBtn").disabled = true;
+  document.getElementById("sheetBackdrop").classList.add("open");
+  setTimeout(()=>document.getElementById("amountInput").focus(), 150);
+}
+function closeSheet(){
+  document.getElementById("sheetBackdrop").classList.remove("open");
+}
+document.getElementById("cancelBtn").onclick = closeSheet;
+document.getElementById("sheetBackdrop").onclick = e=>{ if(e.target.id==="sheetBackdrop") closeSheet(); };
+
+document.getElementById("amountInput").addEventListener("input", e=>{
+  let v = e.target.value.replace(/[^0-9,]/g,"");
+  e.target.value = v;
+  document.getElementById("saveBtn").disabled = !(parseFloat(v.replace(",","."))>0);
+});
+
+document.getElementById("pendSwitch").onclick = function(){
+  pendIsUnpaid = !pendIsUnpaid;
+  this.classList.toggle("on", pendIsUnpaid);
+};
+
+document.getElementById("saveBtn").onclick = async ()=>{
+  const raw = document.getElementById("amountInput").value.replace(",",".");
+  const val = parseFloat(raw);
+  if(!(val>0)) return;
+  const desc = document.getElementById("descInput").value.trim();
+  const isRenda = pendingType === "renda";
+  const entry = {
+    id: "e"+Date.now()+Math.random().toString(36).slice(2,7),
+    ts: Date.now(),
+    category: isRenda ? "" : pendingType,
+    tipo: isRenda ? "renda" : "despesa",
+    amount: val,
+    desc: desc,
+    status: isRenda ? "recebido" : (pendIsUnpaid ? "pendente" : "pago")
+  };
+  entries.unshift(entry);
+  await save();
+  closeSheet();
+  renderAll();
+  showToast(isRenda ? "✓ entrada registrada" : "✓ salvo");
+};
+
+async function deleteEntry(id){
+  entries = entries.filter(e=>e.id!==id);
+  await save();
+  renderAll();
+}
+
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 1600);
+}
+
+async function save(){
+  try{
+    await window.storage.set("entries", JSON.stringify(entries), true);
+  }catch(err){ console.error("storage error", err); }
+}
+async function load(){
+  try{
+    const r = await window.storage.get("entries", true);
+    entries = r ? JSON.parse(r.value) : [];
+  }catch(err){ entries = []; }
+}
+
+function isSameDay(ts, ref){
+  const a = new Date(ts), b = new Date(ref);
+  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+}
+function isSameMonth(ts, ref){
+  const a = new Date(ts), b = new Date(ref);
+  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth();
+}
+
+function renderAll(){
+  const now = Date.now();
+
+  // today strip
+  const todays = entries.filter(e=>e.tipo==="despesa" && isSameDay(e.ts, now));
+  const todayTotal = todays.reduce((s,e)=>s+e.amount,0);
+  document.getElementById("todayTotal").textContent = fmt(todayTotal);
+  document.getElementById("todayCount").textContent = todays.length + (todays.length===1 ? " lançamento" : " lançamentos");
+
+  // recent list (last 6)
+  const recentList = document.getElementById("recentList");
+  const recent = entries.slice(0,6);
+  if(recent.length===0){
+    recentList.innerHTML = '<p class="empty-note">nada lançado ainda — toque numa categoria acima</p>';
+  } else {
+    recentList.innerHTML = recent.map(e=>`
+      <div class="recent-item">
+        <div class="recent-emoji">${e.tipo==="renda" ? "💵" : emojiFor(e.category)}</div>
+        <div class="recent-mid">
+          <p class="recent-cat">${e.tipo==="renda" ? "Entrada" : e.category}</p>
+          <p class="recent-desc">${e.desc || (e.tipo==="renda" ? "dinheiro recebido" : "sem descrição")}</p>
+        </div>
+        <div class="recent-val ${e.status==='pendente' ? 'pendente' : ''}">${e.tipo==='renda' ? '+' : '-'}${fmt(e.amount)}</div>
+        <button class="recent-del" onclick="deleteEntry('${e.id}')">✕</button>
+      </div>
+    `).join("");
+  }
+
+  // resumo view
+  const monthEntries = entries.filter(e=>isSameMonth(e.ts, now));
+  const renda = monthEntries.filter(e=>e.tipo==="renda").reduce((s,e)=>s+e.amount,0);
+  const gastos = monthEntries.filter(e=>e.tipo==="despesa").reduce((s,e)=>s+e.amount,0);
+  const saldo = renda - gastos;
+  document.getElementById("kRenda").textContent = fmt(renda);
+  document.getElementById("kGastos").textContent = fmt(gastos);
+  document.getElementById("kSaldo").textContent = fmt(saldo);
+  const saldoBox = document.getElementById("kSaldoBox");
+  saldoBox.className = "kpi kpi-wide " + (saldo<0 ? "warn" : "good");
+
+  const breakdown = document.getElementById("catBreakdown");
+  breakdown.innerHTML = CATEGORIES.map(c=>{
+    const gasto = monthEntries.filter(e=>e.tipo==="despesa" && e.category===c.id).reduce((s,e)=>s+e.amount,0);
+    const teto = TETOS[c.id] || 0;
+    const pct = teto>0 ? Math.min(100,(gasto/teto)*100) : 0;
+    const over = gasto>teto;
+    return `
+      <div class="cat-row">
+        <div class="cat-row-top">
+          <span class="name">${c.emoji} ${c.id}</span>
+          <span class="nums">${fmt(gasto)} / ${fmt(teto)}</span>
+        </div>
+        <div class="bar-track"><div class="bar-fill ${over?'over':''}" style="width:${pct}%"></div></div>
+      </div>`;
+  }).join("");
+
+  const pendList = document.getElementById("pendList");
+  const pendentes = entries.filter(e=>e.status==="pendente");
+  if(pendentes.length===0){
+    pendList.innerHTML = '<p class="empty-note">nenhuma conta pendente 🎉</p>';
+  } else {
+    pendList.innerHTML = pendentes.map(e=>`
+      <div class="pend-item">
+        <span class="desc">${emojiFor(e.category)} ${e.desc || e.category}</span>
+        <span style="display:flex;align-items:center;">
+          <span class="val">${fmt(e.amount)}</span>
+          <button onclick="markPaid('${e.id}')">marcar pago</button>
+        </span>
+      </div>`).join("");
+  }
+}
+
+async function markPaid(id){
+  const e = entries.find(x=>x.id===id);
+  if(e){ e.status = "pago"; await save(); renderAll(); }
+}
+
+// view toggle
+let showingResumo = false;
+document.getElementById("viewToggle").onclick = ()=>{
+  showingResumo = !showingResumo;
+  document.getElementById("quickView").classList.toggle("hidden", showingResumo);
+  document.getElementById("resumoView").classList.toggle("active", showingResumo);
+  document.getElementById("viewToggle").textContent = showingResumo ? "lançar gasto" : "Ver resumo";
+  document.getElementById("headerSub").textContent = showingResumo ? "resumo do mês" : "toque numa categoria pra lançar";
+};
+
+(async function init(){
+  await load();
+  renderAll();
+})();
+</script>
+</body>
+</html>
